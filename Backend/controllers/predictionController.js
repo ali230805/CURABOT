@@ -1,8 +1,8 @@
 // controllers/predictionController.js
 const Prediction = require('../models/Prediction');
-const Symptom = require('../models/Symptom');
-const Condition = require('../models/Condition');
-const User = require('../models/User');
+const Symptom = require('../models/symptom');
+const Condition = require('../models/condition');
+const User = require('../models/user');
 const axios = require('axios');
 
 // @desc    Create new prediction

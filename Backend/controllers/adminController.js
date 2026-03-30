@@ -1,7 +1,7 @@
 // controllers/adminController.js
-const User = require('../models/User');
-const Symptom = require('../models/Symptom');
-const Condition = require('../models/Condition');
+const User = require('../models/user');
+const Symptom = require('../models/symptom');
+const Condition = require('../models/condition');
 const Prediction = require('../models/Prediction');
 
 // @desc    Get system analytics

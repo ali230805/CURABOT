@@ -1,4 +1,3 @@
-// models/Condition.js
 const mongoose = require('mongoose');
 
 const ConditionSchema = new mongoose.Schema({

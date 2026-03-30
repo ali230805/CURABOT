@@ -1,13 +1,43 @@
 // controllers/authController.js
-const User = require('../models/User');
+const { validationResult } = require('express-validator');
+const User = require('../models/user');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 
+const JWT_SECRET = process.env.JWT_SECRET || 'development_jwt_secret_change_me';
+
 // Generate JWT Token
 const generateToken = (id) => {
-    return jwt.sign({ id }, process.env.JWT_SECRET, {
+    return jwt.sign({ id }, JWT_SECRET, {
         expiresIn: '30d'
     });
+};
+
+const buildUserPayload = (user) => ({
+    id: user._id,
+    name: user.name,
+    email: user.email,
+    age: user.age,
+    biologicalSex: user.biologicalSex,
+    role: user.role
+});
+
+const handleValidationErrors = (req, res) => {
+    const errors = validationResult(req);
+
+    if (!errors.isEmpty()) {
+        res.status(400).json({
+            success: false,
+            message: 'Validation failed',
+            errors: errors.array().map((error) => ({
+                field: error.path,
+                message: error.msg
+            }))
+        });
+        return true;
+    }
+
+    return false;
 };
 
 // @desc    Register user
@@ -15,7 +45,12 @@ const generateToken = (id) => {
 // @access  Public
 const registerUser = async (req, res) => {
     try {
-        const { name, email, password, age, biologicalSex } = req.body;
+        if (handleValidationErrors(req, res)) {
+            return;
+        }
+
+        const { name, password, age, biologicalSex } = req.body;
+        const email = req.body.email.trim().toLowerCase();
 
         // Check if user exists
         const userExists = await User.findOne({ email });
@@ -41,19 +76,13 @@ const registerUser = async (req, res) => {
         res.status(201).json({
             success: true,
             token,
-            user: {
-                id: user._id,
-                name: user.name,
-                email: user.email,
-                age: user.age,
-                biologicalSex: user.biologicalSex,
-                role: user.role
-            }
+            user: buildUserPayload(user)
         });
     } catch (error) {
-        res.status(500).json({
+        const statusCode = error.code === 11000 ? 400 : 500;
+        res.status(statusCode).json({
             success: false,
-            message: error.message
+            message: statusCode === 400 ? 'User already exists' : error.message
         });
     }
 };
@@ -63,7 +92,12 @@ const registerUser = async (req, res) => {
 // @access  Public
 const loginUser = async (req, res) => {
     try {
-        const { email, password } = req.body;
+        if (handleValidationErrors(req, res)) {
+            return;
+        }
+
+        const { password } = req.body;
+        const email = req.body.email.trim().toLowerCase();
 
         // Check for user email
         const user = await User.findOne({ email }).select('+password');
@@ -91,14 +125,7 @@ const loginUser = async (req, res) => {
         res.json({
             success: true,
             token,
-            user: {
-                id: user._id,
-                name: user.name,
-                email: user.email,
-                age: user.age,
-                biologicalSex: user.biologicalSex,
-                role: user.role
-            }
+            user: buildUserPayload(user)
         });
     } catch (error) {
         res.status(500).json({

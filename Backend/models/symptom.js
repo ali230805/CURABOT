@@ -1,4 +1,3 @@
-// models/Symptom.js
 const mongoose = require('mongoose');
 
 const SymptomSchema = new mongoose.Schema({
@@ -24,7 +23,7 @@ const SymptomSchema = new mongoose.Schema({
     },
     commonQuestions: [{
         question: String,
-        type: String // 'severity', 'duration', 'location', 'aggravating', 'relieving'
+        type: String
     }],
     relatedSymptoms: [{
         type: mongoose.Schema.Types.ObjectId,

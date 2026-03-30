@@ -2,7 +2,7 @@
 const express = require('express');
 const router = express.Router();
 const { protect } = require('../middleware/auth');
-const Symptom = require('../models/Symptom');
+const Symptom = require('../models/symptom');
 
 // @desc    Get all symptoms
 // @route   GET /api/symptoms
