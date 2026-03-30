@@ -7,6 +7,7 @@ const {
     registerUser,
     loginUser,
     getMe,
+    logoutUser,
     forgotPassword
 } = require('../controllers/authController');
 
@@ -30,6 +31,7 @@ const loginValidation = [
 router.post('/register', registerValidation, registerUser);
 router.post('/login', loginValidation, loginUser);
 router.get('/me', protect, getMe);
+router.post('/logout', protect, logoutUser);
 router.post('/forgotpassword', forgotPassword);
 
 module.exports = router;

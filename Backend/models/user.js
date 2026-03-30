@@ -38,6 +38,10 @@ const UserSchema = new mongoose.Schema({
         enum: ['user', 'admin'],
         default: 'user'
     },
+    tokenVersion: {
+        type: Number,
+        default: 0
+    },
     predictionHistory: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Prediction'

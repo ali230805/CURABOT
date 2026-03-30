@@ -10,6 +10,7 @@ import Login from './components/auth/Login';
 import Register from './components/auth/Register';
 import ForgotPassword from './components/auth/ForgotPassword';
 import Dashboard from './components/dashboard/Dashboard';
+import PrivateRoute from './components/common/PrivateRoute';
 
 function App() {
   const { isAuthenticated, loading } = useAuth();
@@ -24,15 +25,20 @@ function App() {
       <Navbar />
 
       <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/login" element={isAuthenticated ? <Navigate to="/dashboard" /> : <Login />} />
+        <Route path="/register" element={isAuthenticated ? <Navigate to="/dashboard" /> : <Register />} />
+        <Route path="/forgot-password" element={isAuthenticated ? <Navigate to="/dashboard" /> : <ForgotPassword />} />
 
-        {/* TEMP SAFE ROUTE */}
-        <Route path="/dashboard" element={<Dashboard />} />
+        <Route
+          path="/dashboard"
+          element={
+            <PrivateRoute>
+              <Dashboard />
+            </PrivateRoute>
+          }
+        />
 
-        {/* DEFAULT */}
-        <Route path="/" element={<Navigate to="/login" />} />
+        <Route path="/" element={<Navigate to={isAuthenticated ? '/dashboard' : '/login'} />} />
       </Routes>
 
       <Footer />

@@ -11,6 +11,13 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [token, setToken] = useState(localStorage.getItem('token'));
 
+  const clearAuthState = () => {
+    localStorage.removeItem('token');
+    setToken(null);
+    setUser(null);
+    delete axios.defaults.headers.common['Authorization'];
+  };
+
   // Set axios default header
   if (token) {
     axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
@@ -30,9 +37,7 @@ export const AuthProvider = ({ children }) => {
       setUser(res.data.user);
     } catch (error) {
       console.error('Load user error:', error);
-      localStorage.removeItem('token');
-      setToken(null);
-      delete axios.defaults.headers.common['Authorization'];
+      clearAuthState();
     } finally {
       setLoading(false);
     }
@@ -73,12 +78,17 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const logout = () => {
-    localStorage.removeItem('token');
-    setToken(null);
-    setUser(null);
-    delete axios.defaults.headers.common['Authorization'];
-    toast.success('Logged out successfully');
+  const logout = async () => {
+    try {
+      if (token) {
+        await axios.post(`${process.env.REACT_APP_API_URL}/auth/logout`);
+      }
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      clearAuthState();
+      toast.success('Logged out successfully');
+    }
   };
 
   const value = {

@@ -7,8 +7,8 @@ const crypto = require('crypto');
 const JWT_SECRET = process.env.JWT_SECRET || 'development_jwt_secret_change_me';
 
 // Generate JWT Token
-const generateToken = (id) => {
-    return jwt.sign({ id }, JWT_SECRET, {
+const generateToken = (user) => {
+    return jwt.sign({ id: user._id, tokenVersion: user.tokenVersion || 0 }, JWT_SECRET, {
         expiresIn: '30d'
     });
 };
@@ -71,7 +71,7 @@ const registerUser = async (req, res) => {
         });
 
         // Generate token
-        const token = generateToken(user._id);
+        const token = generateToken(user);
 
         res.status(201).json({
             success: true,
@@ -120,7 +120,7 @@ const loginUser = async (req, res) => {
         }
 
         // Generate token
-        const token = generateToken(user._id);
+        const token = generateToken(user);
 
         res.json({
             success: true,
@@ -147,6 +147,27 @@ const getMe = async (req, res) => {
         res.json({
             success: true,
             user
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
+
+// @desc    Logout user
+// @route   POST /api/auth/logout
+// @access  Private
+const logoutUser = async (req, res) => {
+    try {
+        await User.findByIdAndUpdate(req.user.id, {
+            $inc: { tokenVersion: 1 }
+        });
+
+        res.json({
+            success: true,
+            message: 'Logged out successfully'
         });
     } catch (error) {
         res.status(500).json({
@@ -200,5 +221,6 @@ module.exports = {
     registerUser,
     loginUser,
     getMe,
+    logoutUser,
     forgotPassword
 };

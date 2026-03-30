@@ -28,6 +28,16 @@ const protect = async (req, res, next) => {
                 });
             }
 
+            const decodedTokenVersion = decoded.tokenVersion || 0;
+            const currentTokenVersion = req.user.tokenVersion || 0;
+
+            if (decodedTokenVersion !== currentTokenVersion) {
+                return res.status(401).json({
+                    success: false,
+                    message: 'Not authorized, token has been invalidated'
+                });
+            }
+
             next();
         } catch (error) {
             console.error(error);
