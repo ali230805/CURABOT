@@ -23,6 +23,8 @@ const Navbar = () => {
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
         {isAuthenticated ? (
           <>
+            <Link to="/dashboard" style={{ color: '#fff', textDecoration: 'none' }}>Dashboard</Link>
+            <Link to="/chat" style={{ color: '#fff', textDecoration: 'none' }}>Chat</Link>
             <span style={{ fontSize: '0.95rem' }}>
               {user?.name ? `Hi, ${user.name}` : 'Signed in'}
             </span>

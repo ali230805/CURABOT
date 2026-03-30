@@ -1,6 +1,9 @@
 import React from 'react';
 import { format } from 'date-fns';
 import { FaRobot, FaUser } from 'react-icons/fa';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import './chat.css';
 
 const MessageBubble = ({ message }) => {
   const { content, isBot, timestamp } = message;
@@ -12,7 +15,11 @@ const MessageBubble = ({ message }) => {
       </div>
       <div className="message-content-wrapper">
         <div className="message-content">
-          {content}
+          {isBot ? (
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
+          ) : (
+            content
+          )}
         </div>
         <div className="message-time">
           {format(new Date(timestamp), 'hh:mm a')}

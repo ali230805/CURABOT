@@ -1,7 +1,9 @@
 import axios from 'axios';
 
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+
 const API = axios.create({
-  baseURL: process.env.REACT_APP_API_URL,
+  baseURL: API_BASE_URL,
 });
 
 // Symptom API
@@ -57,6 +59,12 @@ export const updateSymptom = async (id, symptomData) => {
 
 export const deleteSymptom = async (id) => {
   const res = await API.delete(`/admin/symptoms/${id}`);
+  return res.data;
+};
+
+// Chat API
+export const sendChatQuestion = async (question) => {
+  const res = await API.post('/chat', { question });
   return res.data;
 };
 

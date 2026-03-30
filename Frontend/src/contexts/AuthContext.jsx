@@ -3,6 +3,7 @@ import axios from 'axios';
 import toast from 'react-hot-toast';
 
 const AuthContext = createContext();
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
 export const useAuth = () => useContext(AuthContext);
 
@@ -33,7 +34,7 @@ export const AuthProvider = ({ children }) => {
 
   const loadUser = async () => {
     try {
-      const res = await axios.get(`${process.env.REACT_APP_API_URL}/auth/me`);
+      const res = await axios.get(`${API_BASE_URL}/auth/me`);
       setUser(res.data.user);
     } catch (error) {
       console.error('Load user error:', error);
@@ -45,7 +46,7 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
-      const res = await axios.post(`${process.env.REACT_APP_API_URL}/auth/login`, {
+      const res = await axios.post(`${API_BASE_URL}/auth/login`, {
         email,
         password,
       });
@@ -64,7 +65,7 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (userData) => {
     try {
-      const res = await axios.post(`${process.env.REACT_APP_API_URL}/auth/register`, userData);
+      const res = await axios.post(`${API_BASE_URL}/auth/register`, userData);
       const { token, user } = res.data;
       localStorage.setItem('token', token);
       setToken(token);
@@ -81,7 +82,7 @@ export const AuthProvider = ({ children }) => {
   const logout = async () => {
     try {
       if (token) {
-        await axios.post(`${process.env.REACT_APP_API_URL}/auth/logout`);
+        await axios.post(`${API_BASE_URL}/auth/logout`);
       }
     } catch (error) {
       console.error('Logout error:', error);
