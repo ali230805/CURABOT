@@ -6,6 +6,16 @@ const API = axios.create({
   baseURL: API_BASE_URL,
 });
 
+API.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+
+  return config;
+});
+
 // Symptom API
 export const fetchSymptoms = async (category = '', search = '') => {
   const params = new URLSearchParams();
@@ -65,6 +75,11 @@ export const deleteSymptom = async (id) => {
 // Chat API
 export const sendChatQuestion = async (question) => {
   const res = await API.post('/chat', { question });
+  return res.data;
+};
+
+export const fetchChatHistory = async (page = 1, limit = 10) => {
+  const res = await API.get(`/history?page=${page}&limit=${limit}`);
   return res.data;
 };
 

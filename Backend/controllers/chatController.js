@@ -1,5 +1,6 @@
 const { validationResult } = require('express-validator');
 const { generateChatResponse } = require('../services/geminiChatService');
+const ChatHistory = require('../models/ChatHistory');
 
 const createChatResponse = async (req, res) => {
     const errors = validationResult(req);
@@ -18,6 +19,14 @@ const createChatResponse = async (req, res) => {
     try {
         const question = req.body.question.trim();
         const answer = await generateChatResponse(question);
+
+        if (req.user?.id) {
+            await ChatHistory.create({
+                user: req.user.id,
+                question,
+                answer
+            });
+        }
 
         return res.status(200).json({
             success: true,

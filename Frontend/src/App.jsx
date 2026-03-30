@@ -11,6 +11,7 @@ import Register from './components/auth/Register';
 import ForgotPassword from './components/auth/ForgotPassword';
 import Dashboard from './components/dashboard/Dashboard';
 import ChatPage from './components/chat/ChatPage';
+import HistoryPage from './components/history/HistoryPage';
 import PrivateRoute from './components/common/PrivateRoute';
 
 function App() {
@@ -44,6 +45,15 @@ function App() {
           element={
             <PrivateRoute>
               <ChatPage />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/history"
+          element={
+            <PrivateRoute>
+              <HistoryPage />
             </PrivateRoute>
           }
         />

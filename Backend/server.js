@@ -19,6 +19,7 @@ const symptomRoutes = require('./routes/symptoms');
 const predictionRoutes = require('./routes/predictions');
 const adminRoutes = require('./routes/admin');
 const chatRoutes = require('./routes/chat');
+const historyRoutes = require('./routes/history');
 
 // Initialize express app
 const app = express();
@@ -54,6 +55,7 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/curabot',
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/chat', chatRoutes);
+app.use('/api/history', historyRoutes);
 //app.use('/api/users', userRoutes);
 //app.use('/api/symptoms', symptomRoutes);
 //app.use('/api/predictions', predictionRoutes);

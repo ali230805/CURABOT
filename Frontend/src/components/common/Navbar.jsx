@@ -25,6 +25,7 @@ const Navbar = () => {
           <>
             <Link to="/dashboard" style={{ color: '#fff', textDecoration: 'none' }}>Dashboard</Link>
             <Link to="/chat" style={{ color: '#fff', textDecoration: 'none' }}>Chat</Link>
+            <Link to="/history" style={{ color: '#fff', textDecoration: 'none' }}>History</Link>
             <span style={{ fontSize: '0.95rem' }}>
               {user?.name ? `Hi, ${user.name}` : 'Signed in'}
             </span>

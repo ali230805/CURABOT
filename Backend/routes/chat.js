@@ -1,11 +1,13 @@
 const express = require('express');
 const { body } = require('express-validator');
 const { createChatResponse } = require('../controllers/chatController');
+const { protect } = require('../middleware/auth');
 
 const router = express.Router();
 
 router.post(
     '/',
+    protect,
     [
         body('question')
             .trim()
