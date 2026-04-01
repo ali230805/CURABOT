@@ -1,0 +1,53 @@
+services:
+  - type: web
+    name: curabot-backend
+    runtime: node
+    plan: free
+    rootDir: Backend
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /healthz
+    buildFilter:
+      paths:
+        - Backend/**
+        - render.yaml
+        - .node-version
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: JWT_SECRET
+        generateValue: true
+      - key: GEMINI_MAX_OUTPUT_TOKENS
+        value: 1400
+      - key: GEMINI_REQUEST_TIMEOUT_MS
+        value: 45000
+      - key: MONGODB_URI
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: CLIENT_URL
+        sync: false
+      - key: ALLOWED_ORIGINS
+        sync: false
+      - key: ML_API_URL
+        sync: false
+
+  - type: static
+    name: curabot-frontend
+    rootDir: Frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./Frontend/build
+    buildFilter:
+      paths:
+        - Frontend/**
+        - render.yaml
+        - .node-version
+    envVars:
+      - key: REACT_APP_API_URL
+        sync: false
+      - key: REACT_APP_SOCKET_URL
+        sync: false
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html

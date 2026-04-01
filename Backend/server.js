@@ -9,6 +9,7 @@ const dotenv = require('dotenv');
 const { createServer } = require('http');
 const { Server } = require('socket.io');
 
+
 // Load environment variables
 dotenv.config();
 
@@ -24,11 +25,78 @@ const historyRoutes = require('./routes/history');
 // Initialize express app
 const app = express();
 const httpServer = createServer(app);
-const io = new Server(httpServer, {
-    cors: {
-        origin: process.env.CLIENT_URL || 'http://localhost:3000',
-        credentials: true
+app.set('trust proxy', 1);
+const isProduction = process.env.NODE_ENV === 'production';
+const DEFAULT_LOCAL_MONGO_URI = 'mongodb://localhost:27017/curabot';
+
+const normalizeOrigin = (value = '') => value.trim().replace(/\/+$/, '');
+
+const validateEnvironment = () => {
+    if (!isProduction) {
+        return;
     }
+
+    const requiredEnvVars = ['MONGODB_URI', 'JWT_SECRET', 'GEMINI_API_KEY'];
+    const missingEnvVars = requiredEnvVars.filter(
+        (key) => !String(process.env[key] || '').trim()
+    );
+
+    if (missingEnvVars.length > 0) {
+        throw new Error(
+            `Missing required environment variables: ${missingEnvVars.join(', ')}`
+        );
+    }
+};
+
+const getMongoUri = () => {
+    const configuredMongoUri = String(process.env.MONGODB_URI || '').trim();
+
+    if (configuredMongoUri) {
+        return configuredMongoUri;
+    }
+
+    return isProduction ? '' : DEFAULT_LOCAL_MONGO_URI;
+};
+
+const parseAllowedOrigins = () => {
+    const configuredOrigins = [
+        process.env.CLIENT_URL,
+        process.env.RENDER_EXTERNAL_URL,
+        process.env.ALLOWED_ORIGINS
+    ]
+        .filter(Boolean)
+        .flatMap((value) => value.split(','))
+        .map((value) => normalizeOrigin(value))
+        .filter(Boolean);
+
+    const defaultOrigins = [
+        'http://localhost:3000',
+        'http://127.0.0.1:3000'
+    ];
+
+    return Array.from(new Set([...configuredOrigins, ...defaultOrigins]));
+};
+
+const allowedOrigins = parseAllowedOrigins();
+
+const corsOptions = {
+    origin: (origin, callback) => {
+        const normalizedOrigin = origin ? normalizeOrigin(origin) : origin;
+
+        if (!normalizedOrigin || allowedOrigins.includes(normalizedOrigin)) {
+            callback(null, true);
+            return;
+        }
+
+        callback(new Error(`CORS blocked for origin: ${origin}`));
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Session-Id']
+};
+
+const io = new Server(httpServer, {
+    cors: corsOptions
 });
 
 // Rate limiting
@@ -39,18 +107,59 @@ const limiter = rateLimit({
 
 // Middleware
 app.use(helmet());
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use('/api/', limiter);
 
-// Database connection
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/curabot', {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-})
-.then(() => console.log('MongoDB connected successfully'))
-.catch(err => console.error('MongoDB connection error:', err));
+app.get('/', (req, res) => {
+    res.json({
+        success: true,
+        message: 'CURABOT backend is running'
+    });
+});
+
+app.get('/healthz', (req, res) => {
+    const mongoState = mongoose.connection.readyState;
+    const mongoConnected = mongoState === 1;
+
+    res.status(mongoConnected ? 200 : 503).json({
+        success: mongoConnected,
+        service: 'curabot-backend',
+        mongoConnected,
+        uptime: process.uptime()
+    });
+});
+
+mongoose.connection.on('connected', () => {
+    console.log('MongoDB connected successfully');
+});
+
+mongoose.connection.on('error', (error) => {
+    console.error('MongoDB connection error:', error.message);
+});
+
+mongoose.connection.on('disconnected', () => {
+    console.warn('MongoDB disconnected');
+});
+
+const connectToDatabase = async () => {
+    const mongoUri = getMongoUri();
+
+    if (!mongoUri) {
+        throw new Error('MONGODB_URI must be configured for production deployments.');
+    }
+
+    try {
+        await mongoose.connect(mongoUri);
+    } catch (error) {
+        if (isProduction) {
+            throw error;
+        }
+
+        console.error('Unable to connect to MongoDB. Continuing in development mode.');
+    }
+};
 
 // Routes
 app.use('/api/auth', authRoutes);
@@ -119,8 +228,21 @@ app.use((err, req, res, next) => {
 
 // Start server
 const PORT = process.env.PORT || 5000;
-httpServer.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-});
+
+const startServer = async () => {
+    try {
+        validateEnvironment();
+        await connectToDatabase();
+
+        httpServer.listen(PORT, () => {
+            console.log(`Server running on port ${PORT}`);
+        });
+    } catch (error) {
+        console.error('Failed to start CURABOT backend:', error.message);
+        process.exit(1);
+    }
+};
+
+startServer();
 
 module.exports = { app, io };
