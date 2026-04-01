@@ -1,23 +1,25 @@
 // controllers/authController.js
 const { validationResult } = require('express-validator');
-const User = require('../models/user');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
+const { getJwtSecret } = require('../config/runtime');
 const {
-    getJwtSecret,
-    isDatabaseConnected,
-    getDatabaseUnavailableMessage
-} = require('../config/runtime');
+    createUser,
+    findUserByEmail,
+    findUserById,
+    incrementTokenVersion,
+    verifyPassword
+} = require('../services/authStore');
 
 // Generate JWT Token
 const generateToken = (user) => {
-    return jwt.sign({ id: user._id, tokenVersion: user.tokenVersion || 0 }, getJwtSecret(), {
+    return jwt.sign({ id: user._id || user.id, tokenVersion: user.tokenVersion || 0 }, getJwtSecret(), {
         expiresIn: '30d'
     });
 };
 
 const buildUserPayload = (user) => ({
-    id: user._id,
+    id: user._id || user.id,
     name: user.name,
     email: user.email,
     age: user.age,
@@ -42,20 +44,6 @@ const handleValidationErrors = (req, res) => {
 
     return false;
 };
-
-const ensureDatabaseAvailable = (res) => {
-    if (isDatabaseConnected()) {
-        return true;
-    }
-
-    res.status(503).json({
-        success: false,
-        message: getDatabaseUnavailableMessage()
-    });
-
-    return false;
-};
-
 // @desc    Register user
 // @route   POST /api/auth/register
 // @access  Public
@@ -65,15 +53,11 @@ const registerUser = async (req, res) => {
             return;
         }
 
-        if (!ensureDatabaseAvailable(res)) {
-            return;
-        }
-
         const { name, password, age, biologicalSex } = req.body;
         const email = req.body.email.trim().toLowerCase();
 
         // Check if user exists
-        const userExists = await User.findOne({ email });
+        const userExists = await findUserByEmail(email);
         if (userExists) {
             return res.status(400).json({
                 success: false,
@@ -82,7 +66,7 @@ const registerUser = async (req, res) => {
         }
 
         // Create user
-        const user = await User.create({
+        const user = await createUser({
             name,
             email,
             password,
@@ -116,15 +100,11 @@ const loginUser = async (req, res) => {
             return;
         }
 
-        if (!ensureDatabaseAvailable(res)) {
-            return;
-        }
-
         const { password } = req.body;
         const email = req.body.email.trim().toLowerCase();
 
         // Check for user email
-        const user = await User.findOne({ email }).select('+password');
+        const user = await findUserByEmail(email, { includePassword: true });
 
         if (!user) {
             return res.status(401).json({
@@ -134,7 +114,7 @@ const loginUser = async (req, res) => {
         }
 
         // Check password
-        const isPasswordMatch = await user.matchPassword(password);
+        const isPasswordMatch = await verifyPassword(user, password);
 
         if (!isPasswordMatch) {
             return res.status(401).json({
@@ -164,13 +144,7 @@ const loginUser = async (req, res) => {
 // @access  Private
 const getMe = async (req, res) => {
     try {
-        if (!ensureDatabaseAvailable(res)) {
-            return;
-        }
-
-        const user = await User.findById(req.user.id)
-            .select('-password')
-            .populate('predictionHistory');
+        const user = await findUserById(req.user.id);
 
         res.json({
             success: true,
@@ -189,13 +163,7 @@ const getMe = async (req, res) => {
 // @access  Private
 const logoutUser = async (req, res) => {
     try {
-        if (!ensureDatabaseAvailable(res)) {
-            return;
-        }
-
-        await User.findByIdAndUpdate(req.user.id, {
-            $inc: { tokenVersion: 1 }
-        });
+        await incrementTokenVersion(req.user.id);
 
         res.json({
             success: true,
@@ -214,12 +182,9 @@ const logoutUser = async (req, res) => {
 // @access  Public
 const forgotPassword = async (req, res) => {
     try {
-        if (!ensureDatabaseAvailable(res)) {
-            return;
-        }
-
         const { email } = req.body;
-        const user = await User.findOne({ email });
+        const normalizedEmail = email.trim().toLowerCase();
+        const user = await findUserByEmail(normalizedEmail, { includePassword: true });
 
         if (!user) {
             return res.status(404).json({
@@ -230,20 +195,12 @@ const forgotPassword = async (req, res) => {
 
         // Generate reset token
         const resetToken = crypto.randomBytes(20).toString('hex');
-        user.resetPasswordToken = crypto
-            .createHash('sha256')
-            .update(resetToken)
-            .digest('hex');
-        user.resetPasswordExpire = Date.now() + 10 * 60 * 1000; // 10 minutes
-
-        await user.save();
-
         // Send email (implement your email service)
         // const resetUrl = `${req.protocol}://${req.get('host')}/api/auth/resetpassword/${resetToken}`;
 
         res.json({
             success: true,
-            message: 'Password reset email sent'
+            message: 'Password reset flow is not configured in this deployment yet.'
         });
     } catch (error) {
         res.status(500).json({

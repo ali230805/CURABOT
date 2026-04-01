@@ -1,7 +1,22 @@
 const ChatHistory = require('../models/ChatHistory');
+const { isDatabaseConnected } = require('../config/runtime');
 
 const getChatHistory = async (req, res) => {
     try {
+        if (!isDatabaseConnected()) {
+            res.json({
+                success: true,
+                data: [],
+                pagination: {
+                    page: 1,
+                    limit: 10,
+                    total: 0,
+                    pages: 0
+                }
+            });
+            return;
+        }
+
         const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
         const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 10, 1), 50);
         const skip = (page - 1) * limit;
