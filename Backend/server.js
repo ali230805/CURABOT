@@ -31,6 +31,25 @@ const isProduction = process.env.NODE_ENV === 'production';
 const DEFAULT_LOCAL_MONGO_URI = 'mongodb://localhost:27017/curabot';
 
 const normalizeOrigin = (value = '') => value.trim().replace(/\/+$/, '');
+const splitEnvList = (value = '') => value.split(',').map((item) => item.trim()).filter(Boolean);
+
+const getFrontendUrl = () => {
+    const primaryClientUrl = normalizeOrigin(process.env.CLIENT_URL || '');
+
+    if (primaryClientUrl) {
+        return primaryClientUrl;
+    }
+
+    const configuredOrigins = splitEnvList(process.env.ALLOWED_ORIGINS || '')
+        .map((value) => normalizeOrigin(value))
+        .filter(Boolean);
+
+    const publicOrigin = configuredOrigins.find(
+        (value) => !value.includes('localhost') && !value.includes('127.0.0.1')
+    );
+
+    return publicOrigin || '';
+};
 
 const logConfigurationWarnings = () => {
     const missingEnvVars = getMissingCriticalEnvVars();
@@ -65,7 +84,7 @@ const parseAllowedOrigins = () => {
         process.env.ALLOWED_ORIGINS
     ]
         .filter(Boolean)
-        .flatMap((value) => value.split(','))
+        .flatMap((value) => splitEnvList(value))
         .map((value) => normalizeOrigin(value))
         .filter(Boolean);
 
@@ -113,7 +132,14 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/api/', limiter);
 
 app.get('/', (req, res) => {
+    const frontendUrl = getFrontendUrl();
+
     if (req.accepts('html')) {
+        if (frontendUrl) {
+            res.redirect(302, frontendUrl);
+            return;
+        }
+
         res.type('html').send(`
 <!doctype html>
 <html lang="en">
@@ -135,7 +161,7 @@ app.get('/', (req, res) => {
       <h1>CURABOT backend is running</h1>
       <p>This URL is the backend API, not the frontend website.</p>
       <p>Health check: <a href="/healthz"><code>/healthz</code></a></p>
-      <p>Open the deployed frontend URL to use the app interface.</p>
+      <p>Set <code>CLIENT_URL</code> to your deployed frontend URL if you want this link to open the CURABOT website automatically.</p>
     </main>
   </body>
 </html>

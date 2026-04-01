@@ -59,6 +59,8 @@ Recommended:
 - `GEMINI_MAX_OUTPUT_TOKENS=1400`
 - `GEMINI_REQUEST_TIMEOUT_MS=45000`
 
+If `CLIENT_URL` is set, visiting the backend root URL in a browser will redirect to the frontend website.
+
 Optional legacy integration:
 
 - `ML_API_URL=https://your-ml-service.onrender.com`
