@@ -6,6 +6,9 @@
   "main": "index.js",
   "scripts": {
     "postinstall": "npm install --prefix Backend && npm install --prefix Frontend && npm run build --prefix Frontend",
+    "dev": "node scripts/dev.js",
+    "dev:backend": "cross-env PORT=5001 npm run dev --prefix Backend",
+    "dev:frontend": "cross-env PORT=3001 BROWSER=none REACT_APP_API_URL=http://localhost:5001/api REACT_APP_SOCKET_URL=http://localhost:5001 npm run dev --prefix Frontend",
     "build": "npm run build --prefix Frontend",
     "start": "npm run start --prefix Backend"
   },
@@ -15,5 +18,9 @@
   "type": "commonjs",
   "engines": {
     "node": ">=22.0.0 <23.0.0"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1",
+    "cross-env": "^10.1.0"
   }
 }
