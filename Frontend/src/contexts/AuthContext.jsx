@@ -1,9 +1,10 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
+import { getApiBaseUrl } from '../utils/runtimeConfig';
 
 const AuthContext = createContext();
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+const API_BASE_URL = getApiBaseUrl();
 const AUTH_TOKEN_KEY = 'curabot-auth-token';
 const LEGACY_TOKEN_KEY = 'token';
 

@@ -102,4 +102,6 @@ If you accidentally point Render at the repo root instead of a subdirectory:
 - Frontend build command: `npm install && npm run build`
 - Frontend publish directory: `Frontend/build` if deploying from the repo root, or `build` if the service root directory is `Frontend`
 
+The repo-root web service now builds the frontend during install and serves the CURABOT website from the same Express server, so a single Render web service can host both the UI and the API at one URL.
+
 Using `Backend` and `Frontend` as the service root directories is still the cleaner setup.

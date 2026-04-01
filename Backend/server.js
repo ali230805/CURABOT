@@ -5,6 +5,8 @@ const axios = require('axios');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
+const fs = require('fs');
+const path = require('path');
 const dotenv = require('dotenv');
 const { createServer } = require('http');
 const { Server } = require('socket.io');
@@ -29,6 +31,9 @@ const httpServer = createServer(app);
 app.set('trust proxy', 1);
 const isProduction = process.env.NODE_ENV === 'production';
 const DEFAULT_LOCAL_MONGO_URI = 'mongodb://localhost:27017/curabot';
+const frontendBuildPath = path.resolve(__dirname, '../Frontend/build');
+const frontendIndexPath = path.join(frontendBuildPath, 'index.html');
+const hasBuiltFrontend = fs.existsSync(frontendIndexPath);
 
 const normalizeOrigin = (value = '') => value.trim().replace(/\/+$/, '');
 const splitEnvList = (value = '') => value.split(',').map((item) => item.trim()).filter(Boolean);
@@ -131,10 +136,19 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use('/api/', limiter);
 
+if (hasBuiltFrontend) {
+    app.use(express.static(frontendBuildPath));
+}
+
 app.get('/', (req, res) => {
     const frontendUrl = getFrontendUrl();
 
     if (req.accepts('html')) {
+        if (hasBuiltFrontend) {
+            res.sendFile(frontendIndexPath);
+            return;
+        }
+
         if (frontendUrl) {
             res.redirect(302, frontendUrl);
             return;
@@ -226,6 +240,24 @@ app.use('/api/history', historyRoutes);
 //app.use('/api/symptoms', symptomRoutes);
 //app.use('/api/predictions', predictionRoutes);
 //app.use('/api/admin', adminRoutes);
+
+if (hasBuiltFrontend) {
+    app.get('*', (req, res, next) => {
+        const isFrontendDocumentRequest =
+            req.method === 'GET' &&
+            req.accepts('html') &&
+            !req.path.startsWith('/api/') &&
+            req.path !== '/healthz' &&
+            !req.path.startsWith('/socket.io');
+
+        if (!isFrontendDocumentRequest) {
+            next();
+            return;
+        }
+
+        res.sendFile(frontendIndexPath);
+    });
+}
 
 // Socket.io for real-time chat
 io.on('connection', (socket) => {

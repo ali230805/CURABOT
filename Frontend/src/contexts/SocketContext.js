@@ -1,13 +1,10 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { io } from 'socket.io-client';
 import { useAuth } from './AuthContext';
+import { getSocketBaseUrl } from '../utils/runtimeConfig';
 
 const SocketContext = createContext();
-const socketBaseUrl =
-  process.env.REACT_APP_SOCKET_URL ||
-  (process.env.REACT_APP_API_URL
-    ? process.env.REACT_APP_API_URL.replace(/\/api\/?$/, '')
-    : '');
+const socketBaseUrl = getSocketBaseUrl();
 
 export const useSocket = () => useContext(SocketContext);
 
