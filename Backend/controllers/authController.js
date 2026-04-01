@@ -3,12 +3,11 @@ const { validationResult } = require('express-validator');
 const User = require('../models/user');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
-
-const JWT_SECRET = process.env.JWT_SECRET || 'development_jwt_secret_change_me';
+const { getJwtSecret } = require('../config/runtime');
 
 // Generate JWT Token
 const generateToken = (user) => {
-    return jwt.sign({ id: user._id, tokenVersion: user.tokenVersion || 0 }, JWT_SECRET, {
+    return jwt.sign({ id: user._id, tokenVersion: user.tokenVersion || 0 }, getJwtSecret(), {
         expiresIn: '30d'
     });
 };

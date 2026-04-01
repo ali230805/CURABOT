@@ -8,6 +8,7 @@ const rateLimit = require('express-rate-limit');
 const dotenv = require('dotenv');
 const { createServer } = require('http');
 const { Server } = require('socket.io');
+const { getMissingCriticalEnvVars } = require('./config/runtime');
 
 
 // Load environment variables
@@ -31,20 +32,19 @@ const DEFAULT_LOCAL_MONGO_URI = 'mongodb://localhost:27017/curabot';
 
 const normalizeOrigin = (value = '') => value.trim().replace(/\/+$/, '');
 
-const validateEnvironment = () => {
-    if (!isProduction) {
-        return;
-    }
-
-    const requiredEnvVars = ['MONGODB_URI', 'JWT_SECRET', 'GEMINI_API_KEY'];
-    const missingEnvVars = requiredEnvVars.filter(
-        (key) => !String(process.env[key] || '').trim()
-    );
+const logConfigurationWarnings = () => {
+    const missingEnvVars = getMissingCriticalEnvVars();
 
     if (missingEnvVars.length > 0) {
-        throw new Error(
-            `Missing required environment variables: ${missingEnvVars.join(', ')}`
+        console.warn(
+            `Starting CURABOT with missing environment variables: ${missingEnvVars.join(', ')}`
         );
+
+        if (isProduction) {
+            console.warn(
+                'The service will stay online in degraded mode, but database-backed and AI-backed features may fail until these values are configured.'
+            );
+        }
     }
 };
 
@@ -122,11 +122,14 @@ app.get('/', (req, res) => {
 app.get('/healthz', (req, res) => {
     const mongoState = mongoose.connection.readyState;
     const mongoConnected = mongoState === 1;
+    const missingEnvVars = getMissingCriticalEnvVars();
 
-    res.status(mongoConnected ? 200 : 503).json({
-        success: mongoConnected,
+    res.status(200).json({
+        success: true,
         service: 'curabot-backend',
+        ready: mongoConnected && missingEnvVars.length === 0,
         mongoConnected,
+        missingEnvVars,
         uptime: process.uptime()
     });
 });
@@ -147,17 +150,15 @@ const connectToDatabase = async () => {
     const mongoUri = getMongoUri();
 
     if (!mongoUri) {
-        throw new Error('MONGODB_URI must be configured for production deployments.');
+        console.warn('MONGODB_URI is not configured. Skipping MongoDB connection.');
+        return;
     }
 
     try {
         await mongoose.connect(mongoUri);
     } catch (error) {
-        if (isProduction) {
-            throw error;
-        }
-
-        console.error('Unable to connect to MongoDB. Continuing in development mode.');
+        console.error('Unable to connect to MongoDB. Continuing in degraded mode.');
+        console.error(error.message);
     }
 };
 
@@ -231,7 +232,7 @@ const PORT = process.env.PORT || 5000;
 
 const startServer = async () => {
     try {
-        validateEnvironment();
+        logConfigurationWarnings();
         await connectToDatabase();
 
         httpServer.listen(PORT, () => {
