@@ -3,6 +3,11 @@ import { io } from 'socket.io-client';
 import { useAuth } from './AuthContext';
 
 const SocketContext = createContext();
+const socketBaseUrl =
+  process.env.REACT_APP_SOCKET_URL ||
+  (process.env.REACT_APP_API_URL
+    ? process.env.REACT_APP_API_URL.replace(/\/api\/?$/, '')
+    : '');
 
 export const useSocket = () => useContext(SocketContext);
 
@@ -11,8 +16,10 @@ export const SocketProvider = ({ children }) => {
   const { user } = useAuth();
 
   useEffect(() => {
-    if (user) {
-      const newSocket = io(process.env.REACT_APP_SOCKET_URL);
+    if (user && socketBaseUrl) {
+      const newSocket = io(socketBaseUrl, {
+        transports: ['websocket', 'polling'],
+      });
       setSocket(newSocket);
 
       newSocket.on('connect', () => {

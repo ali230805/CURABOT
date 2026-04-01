@@ -1,16 +1,25 @@
 import axios from 'axios';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+const AUTH_TOKEN_KEY = 'curabot-auth-token';
+const LEGACY_TOKEN_KEY = 'token';
+
+const getStoredToken = () =>
+  localStorage.getItem(AUTH_TOKEN_KEY) ||
+  sessionStorage.getItem(AUTH_TOKEN_KEY) ||
+  localStorage.getItem(LEGACY_TOKEN_KEY);
 
 const API = axios.create({
   baseURL: API_BASE_URL,
 });
 
 API.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
+  const token = getStoredToken();
 
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
+  } else if (config.headers?.Authorization) {
+    delete config.headers.Authorization;
   }
 
   return config;
@@ -80,6 +89,11 @@ export const sendChatQuestion = async (question) => {
 
 export const fetchChatHistory = async (page = 1, limit = 10) => {
   const res = await API.get(`/history?page=${page}&limit=${limit}`);
+  return res.data;
+};
+
+export const requestPasswordReset = async (email) => {
+  const res = await API.post('/auth/forgotpassword', { email });
   return res.data;
 };
 

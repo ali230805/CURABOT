@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 import MessageBubble from './MessageBubble';
 import { sendChatQuestion } from '../../services/api';
@@ -7,23 +7,33 @@ import './chat-page.css';
 const INITIAL_MESSAGE = {
   id: 'welcome-message',
   content:
-    'Ask a health-related question and CURABOT will provide general guidance. For emergencies or severe symptoms, contact a medical professional immediately.',
+    'Hello! I am CURABOT, your AI health assistant. Describe your symptoms or use one of the quick prompts below, and I will provide general guidance.',
   isBot: true,
   timestamp: new Date().toISOString(),
 };
+
+const QUICK_PROMPTS = [
+  { label: 'Headache', prompt: 'I have a headache and mild fatigue. What should I watch for?' },
+  { label: 'Fever', prompt: 'I have had a fever since yesterday. When should I seek medical help?' },
+  { label: 'Cough', prompt: 'I have a dry cough and sore throat. What are common next steps?' },
+  { label: 'Body Pain', prompt: 'I have body pain with weakness. What could be causing it?' },
+  { label: 'Cold', prompt: 'I think I have a cold. What self-care steps should I take?' },
+  { label: 'Dizziness', prompt: 'I feel dizzy on and off today. What symptoms should I monitor?' },
+];
 
 const ChatPage = () => {
   const [question, setQuestion] = useState('');
   const [messages, setMessages] = useState([INITIAL_MESSAGE]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const messagesEndRef = useRef(null);
 
-  const hasMessages = useMemo(() => messages.length > 1, [messages.length]);
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, isSubmitting]);
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-
-    const trimmedQuestion = question.trim();
+  const submitQuestion = async (rawQuestion) => {
+    const trimmedQuestion = rawQuestion.trim();
 
     if (!trimmedQuestion) {
       const validationMessage = 'Please enter a health-related question.';
@@ -66,15 +76,44 @@ const ChatPage = () => {
     }
   };
 
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    await submitQuestion(question);
+  };
+
+  const hasMessages = messages.length > 1;
+
   return (
     <main className="chat-page">
       <section className="chat-page__panel">
         <div className="chat-page__hero">
-          <p className="chat-page__eyebrow">AI Health Assistant</p>
-          <h1>Chat with CURABOT</h1>
-          <p className="chat-page__subtitle">
-            Get general health guidance with a clean request-response flow built for future expansion.
-          </p>
+          <div>
+            <p className="chat-page__eyebrow">Symptom Input Page</p>
+            <h1>Health Assessment</h1>
+            <p className="chat-page__subtitle">
+              Describe symptoms, ask a health question, or tap a quick prompt to begin the CURABOT
+              conversation flow.
+            </p>
+          </div>
+
+          <div className="chat-page__hero-note">
+            <strong>General guidance only</strong>
+            <span>For emergencies or rapidly worsening symptoms, contact a medical professional immediately.</span>
+          </div>
+        </div>
+
+        <div className="chat-page__quick-prompts">
+          {QUICK_PROMPTS.map((item) => (
+            <button
+              key={item.label}
+              type="button"
+              className="chat-page__prompt"
+              onClick={() => submitQuestion(item.prompt)}
+              disabled={isSubmitting}
+            >
+              {item.label}
+            </button>
+          ))}
         </div>
 
         <div className="chat-page__messages" aria-live="polite">
@@ -91,14 +130,16 @@ const ChatPage = () => {
 
           {!hasMessages && !isSubmitting && (
             <div className="chat-page__empty-state">
-              Try asking about symptoms, prevention, self-care, or when to seek medical help.
+              Try a symptom prompt above or ask about self-care, prevention, or when to seek help.
             </div>
           )}
+
+          <div ref={messagesEndRef} />
         </div>
 
         <form className="chat-page__composer" onSubmit={handleSubmit}>
           <label className="chat-page__label" htmlFor="health-question">
-            Your question
+            Share your symptoms
           </label>
           <textarea
             id="health-question"
@@ -106,7 +147,7 @@ const ChatPage = () => {
             value={question}
             onChange={(event) => setQuestion(event.target.value)}
             placeholder="Example: I have had a sore throat and mild fever for two days. What should I watch for?"
-            rows={5}
+            rows={4}
             maxLength={2000}
             disabled={isSubmitting}
           />

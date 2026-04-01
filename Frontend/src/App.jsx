@@ -11,6 +11,7 @@ import Login from './components/auth/Login';
 import Register from './components/auth/Register';
 import ForgotPassword from './components/auth/ForgotPassword';
 import Dashboard from './components/dashboard/Dashboard';
+import PredictionResult from './components/dashboard/PredictionResult';
 import ChatPage from './components/chat/ChatPage';
 import HistoryPage from './components/history/HistoryPage';
 import PrivateRoute from './components/common/PrivateRoute';
@@ -19,13 +20,15 @@ function App() {
   const { isAuthenticated, loading } = useAuth();
 
   if (loading) {
-    return <h2 style={{ textAlign: "center", marginTop: "50px" }}>Loading...</h2>;
+    return <div className="app-loading">Loading CURABOT...</div>;
   }
 
   return (
     <div className="app-shell">
       <Toaster position="top-right" />
-      <Navbar />
+      <div className="app-navbar">
+        <Navbar />
+      </div>
 
       <main className="app-main">
         <Routes>
@@ -60,11 +63,22 @@ function App() {
             }
           />
 
+          <Route
+            path="/prediction-result"
+            element={
+              <PrivateRoute>
+                <PredictionResult />
+              </PrivateRoute>
+            }
+          />
+
           <Route path="/" element={<Navigate to={isAuthenticated ? '/dashboard' : '/login'} />} />
         </Routes>
       </main>
 
-      <Footer />
+      <div className="app-footer">
+        <Footer />
+      </div>
     </div>
   );
 }

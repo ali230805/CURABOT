@@ -1,57 +1,86 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, NavLink } from 'react-router-dom';
+import { FaHeartbeat } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
 
 const Navbar = () => {
   const { isAuthenticated, user, logout } = useAuth();
+  const authenticatedLinks = [
+    { to: '/dashboard', label: 'Dashboard' },
+    { to: '/chat', label: 'Assessment' },
+    { to: '/history', label: 'History' },
+  ];
 
   return (
-    <div
-      style={{
-        padding: '10px 16px',
-        background: '#222',
-        color: '#fff',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between'
-      }}
-    >
-      <Link to={isAuthenticated ? '/dashboard' : '/login'} style={{ color: '#fff', textDecoration: 'none' }}>
-        <h2 style={{ margin: 0 }}>CuraBot</h2>
+    <nav className="navbar" aria-label="Primary">
+      <Link to={isAuthenticated ? '/dashboard' : '/login'} className="navbar__brand">
+        <span className="navbar__logo">
+          <FaHeartbeat />
+        </span>
+        <span className="navbar__brand-copy">
+          <span className="navbar__brand-title">CuraBot</span>
+          <span className="navbar__brand-subtitle">Smart Health Assistant</span>
+        </span>
       </Link>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+      <div className="navbar__links">
+        {isAuthenticated ? (
+          authenticatedLinks.map((link) => (
+            <NavLink
+              key={link.to}
+              to={link.to}
+              className={({ isActive }) =>
+                `navbar__link${isActive ? ' navbar__link--active' : ''}`
+              }
+            >
+              {link.label}
+            </NavLink>
+          ))
+        ) : (
+          <>
+            <NavLink
+              to="/login"
+              className={({ isActive }) =>
+                `navbar__link${isActive ? ' navbar__link--active' : ''}`
+              }
+            >
+              Login
+            </NavLink>
+            <NavLink
+              to="/register"
+              className={({ isActive }) =>
+                `navbar__link${isActive ? ' navbar__link--active' : ''}`
+              }
+            >
+              Sign Up
+            </NavLink>
+          </>
+        )}
+      </div>
+
+      <div className="navbar__actions">
         {isAuthenticated ? (
           <>
-            <Link to="/dashboard" style={{ color: '#fff', textDecoration: 'none' }}>Dashboard</Link>
-            <Link to="/chat" style={{ color: '#fff', textDecoration: 'none' }}>Chat</Link>
-            <Link to="/history" style={{ color: '#fff', textDecoration: 'none' }}>History</Link>
-            <span style={{ fontSize: '0.95rem' }}>
-              {user?.name ? `Hi, ${user.name}` : 'Signed in'}
-            </span>
-            <button
-              type="button"
-              onClick={logout}
-              style={{
-                border: '1px solid #fff',
-                background: 'transparent',
-                color: '#fff',
-                padding: '6px 12px',
-                borderRadius: '6px',
-                cursor: 'pointer'
-              }}
-            >
+            <div className="navbar__user">
+              <span>Signed in as</span>
+              <strong>{user?.name || 'User'}</strong>
+            </div>
+            <button type="button" onClick={logout} className="navbar__action navbar__action--ghost">
               Sign out
             </button>
           </>
         ) : (
           <>
-            <Link to="/login" style={{ color: '#fff', textDecoration: 'none' }}>Login</Link>
-            <Link to="/register" style={{ color: '#fff', textDecoration: 'none' }}>Register</Link>
+            <Link to="/login" className="navbar__action navbar__action--ghost">
+              Login
+            </Link>
+            <Link to="/register" className="navbar__action navbar__action--primary">
+              Sign Up
+            </Link>
           </>
         )}
       </div>
-    </div>
+    </nav>
   );
 };
 

@@ -1,16 +1,16 @@
 .history-page {
-  min-height: calc(100vh - 124px);
-  padding: 32px 20px;
+  min-height: calc(100vh - 150px);
+  padding: 34px 20px 0;
 }
 
 .history-page__panel {
-  max-width: 980px;
+  max-width: 1020px;
   margin: 0 auto;
   padding: 28px;
-  border-radius: 28px;
-  background: rgba(255, 255, 255, 0.96);
-  box-shadow: 0 24px 60px rgba(40, 45, 90, 0.24);
-  backdrop-filter: blur(12px);
+  border-radius: 30px;
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid var(--border-soft);
+  box-shadow: var(--shadow-soft);
 }
 
 .history-page__header {
@@ -25,40 +25,42 @@
 }
 
 .history-page__icon {
-  width: 48px;
-  height: 48px;
+  width: 50px;
+  height: 50px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 14px;
-  color: #fff;
-  background: linear-gradient(135deg, #4760d8 0%, #6f53d7 100%);
+  border-radius: 16px;
+  color: var(--primary-strong);
+  background: linear-gradient(180deg, #ffffff 0%, var(--primary-soft) 100%);
 }
 
 .history-page__eyebrow {
   margin: 0 0 4px;
   font-size: 0.78rem;
-  font-weight: 700;
+  font-weight: 800;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: #4353b3;
+  color: var(--primary-strong);
 }
 
 .history-page__header h1 {
   margin: 0;
-  color: #18203f;
+  color: var(--text-strong);
 }
 
 .history-page__subtitle {
   margin: 0;
-  color: #54607f;
+  color: var(--text-muted);
+  line-height: 1.7;
 }
 
 .history-page__state-card {
   padding: 22px;
-  border-radius: 20px;
-  background: linear-gradient(180deg, #f7f8ff 0%, #eef2ff 100%);
-  color: #32406f;
+  border-radius: 22px;
+  background: linear-gradient(180deg, #f8fcfd 0%, #eff7f8 100%);
+  color: var(--text-muted);
+  border: 1px solid rgba(100, 147, 168, 0.12);
 }
 
 .history-page__list {
@@ -67,11 +69,11 @@
 }
 
 .history-page__card {
-  padding: 20px;
-  border-radius: 22px;
-  background: linear-gradient(180deg, #fbfcff 0%, #f3f5ff 100%);
-  border: 1px solid #e0e5fb;
-  box-shadow: 0 10px 24px rgba(42, 52, 110, 0.08);
+  padding: 22px;
+  border-radius: 24px;
+  background: linear-gradient(180deg, #fbfeff 0%, #f4fafb 100%);
+  border: 1px solid rgba(100, 147, 168, 0.14);
+  box-shadow: 0 12px 24px rgba(72, 113, 132, 0.08);
 }
 
 .history-page__meta {
@@ -79,7 +81,7 @@
   justify-content: space-between;
   gap: 12px;
   font-size: 0.9rem;
-  color: #657091;
+  color: var(--text-subtle);
   margin-bottom: 16px;
 }
 
@@ -89,22 +91,22 @@
 
 .history-page__label {
   margin: 0 0 8px;
-  font-size: 0.85rem;
-  font-weight: 700;
+  font-size: 0.82rem;
+  font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: #4f5a86;
+  letter-spacing: 0.1em;
+  color: var(--primary-strong);
 }
 
 .history-page__question {
   margin: 0;
-  color: #18203f;
-  line-height: 1.6;
+  color: var(--text-strong);
+  line-height: 1.7;
 }
 
 .history-page__answer {
-  color: #24315f;
-  line-height: 1.7;
+  color: var(--text-muted);
+  line-height: 1.75;
 }
 
 .history-page__answer > *:first-child {
@@ -132,15 +134,15 @@
 .history-page__answer code {
   padding: 2px 6px;
   border-radius: 6px;
-  background: rgba(49, 68, 145, 0.08);
+  background: rgba(41, 150, 230, 0.08);
 }
 
 .history-page__answer pre {
   overflow-x: auto;
   padding: 12px 14px;
-  border-radius: 12px;
-  background: #18203f;
-  color: #eef2ff;
+  border-radius: 14px;
+  background: #17343d;
+  color: #eff7f8;
 }
 
 .history-page__answer pre code {
@@ -159,10 +161,12 @@
 .history-page__pagination button {
   border: none;
   border-radius: 999px;
-  padding: 10px 16px;
-  color: #fff;
-  background: linear-gradient(135deg, #4760d8 0%, #6f53d7 100%);
+  min-height: 46px;
+  padding: 10px 18px;
+  color: #ffffff;
+  background: linear-gradient(135deg, var(--primary) 0%, #58b7f3 100%);
   cursor: pointer;
+  box-shadow: 0 14px 24px rgba(41, 150, 230, 0.18);
 }
 
 .history-page__pagination button:disabled {
@@ -172,12 +176,12 @@
 
 @media (max-width: 768px) {
   .history-page {
-    padding: 20px 12px;
+    padding: 18px 12px 0;
   }
 
   .history-page__panel {
-    padding: 20px;
-    border-radius: 22px;
+    padding: 22px 18px;
+    border-radius: 24px;
   }
 
   .history-page__meta,
