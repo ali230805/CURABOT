@@ -17,6 +17,13 @@ const HEALTH_ASSISTANT_PROMPT = [
     'If space is limited, finish the answer cleanly rather than stopping abruptly.'
 ].join(' ');
 
+const LIMITED_MODE_RESPONSE = [
+    'CURABOT chat is running in limited mode right now.',
+    'The AI response service is not configured yet, so I cannot generate a full personalized answer.',
+    'If your symptoms are severe, worsening, or urgent, please contact a medical professional or emergency service immediately.',
+    'For full AI chat responses on the deployed site, set GEMINI_API_KEY in the Render backend environment variables and redeploy.'
+].join(' ');
+
 const extractGeminiText = (data) => {
     const parts = data?.candidates?.[0]?.content?.parts;
 
@@ -139,9 +146,7 @@ const generateChatResponse = async (question) => {
     const apiKey = process.env.GEMINI_API_KEY;
 
     if (!apiKey) {
-        const error = new Error('Gemini API key is not configured.');
-        error.statusCode = 500;
-        throw error;
+        return LIMITED_MODE_RESPONSE;
     }
 
     try {
