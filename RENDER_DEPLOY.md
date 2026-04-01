@@ -98,6 +98,6 @@ If you accidentally point Render at the repo root instead of a subdirectory:
 - Backend build command: `npm install`
 - Backend start command: `npm start`
 - Frontend build command: `npm install && npm run build`
-- Frontend publish directory: `Frontend/build`
+- Frontend publish directory: `Frontend/build` if deploying from the repo root, or `build` if the service root directory is `Frontend`
 
 Using `Backend` and `Frontend` as the service root directories is still the cleaner setup.

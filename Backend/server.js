@@ -113,6 +113,36 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/api/', limiter);
 
 app.get('/', (req, res) => {
+    if (req.accepts('html')) {
+        res.type('html').send(`
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CURABOT Backend</title>
+    <style>
+      body { margin: 0; font-family: Arial, sans-serif; background: #0f172a; color: #e2e8f0; }
+      main { max-width: 720px; margin: 48px auto; padding: 32px; background: #111827; border: 1px solid #334155; border-radius: 16px; }
+      h1 { margin-top: 0; }
+      p { line-height: 1.6; }
+      code { background: #1e293b; padding: 2px 6px; border-radius: 6px; }
+      a { color: #93c5fd; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>CURABOT backend is running</h1>
+      <p>This URL is the backend API, not the frontend website.</p>
+      <p>Health check: <a href="/healthz"><code>/healthz</code></a></p>
+      <p>Open the deployed frontend URL to use the app interface.</p>
+    </main>
+  </body>
+</html>
+        `);
+        return;
+    }
+
     res.json({
         success: true,
         message: 'CURABOT backend is running'
