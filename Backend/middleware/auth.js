@@ -1,7 +1,11 @@
 // middleware/auth.js
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
-const { getJwtSecret } = require('../config/runtime');
+const {
+    getJwtSecret,
+    isDatabaseConnected,
+    getDatabaseUnavailableMessage
+} = require('../config/runtime');
 
 const protect = async (req, res, next) => {
     let token;
@@ -10,6 +14,13 @@ const protect = async (req, res, next) => {
         req.headers.authorization &&
         req.headers.authorization.startsWith('Bearer')
     ) {
+        if (!isDatabaseConnected()) {
+            return res.status(503).json({
+                success: false,
+                message: getDatabaseUnavailableMessage()
+            });
+        }
+
         try {
             // Get token from header
             token = req.headers.authorization.split(' ')[1];

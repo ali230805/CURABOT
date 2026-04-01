@@ -3,7 +3,11 @@ const { validationResult } = require('express-validator');
 const User = require('../models/user');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
-const { getJwtSecret } = require('../config/runtime');
+const {
+    getJwtSecret,
+    isDatabaseConnected,
+    getDatabaseUnavailableMessage
+} = require('../config/runtime');
 
 // Generate JWT Token
 const generateToken = (user) => {
@@ -39,12 +43,29 @@ const handleValidationErrors = (req, res) => {
     return false;
 };
 
+const ensureDatabaseAvailable = (res) => {
+    if (isDatabaseConnected()) {
+        return true;
+    }
+
+    res.status(503).json({
+        success: false,
+        message: getDatabaseUnavailableMessage()
+    });
+
+    return false;
+};
+
 // @desc    Register user
 // @route   POST /api/auth/register
 // @access  Public
 const registerUser = async (req, res) => {
     try {
         if (handleValidationErrors(req, res)) {
+            return;
+        }
+
+        if (!ensureDatabaseAvailable(res)) {
             return;
         }
 
@@ -95,6 +116,10 @@ const loginUser = async (req, res) => {
             return;
         }
 
+        if (!ensureDatabaseAvailable(res)) {
+            return;
+        }
+
         const { password } = req.body;
         const email = req.body.email.trim().toLowerCase();
 
@@ -139,6 +164,10 @@ const loginUser = async (req, res) => {
 // @access  Private
 const getMe = async (req, res) => {
     try {
+        if (!ensureDatabaseAvailable(res)) {
+            return;
+        }
+
         const user = await User.findById(req.user.id)
             .select('-password')
             .populate('predictionHistory');
@@ -160,6 +189,10 @@ const getMe = async (req, res) => {
 // @access  Private
 const logoutUser = async (req, res) => {
     try {
+        if (!ensureDatabaseAvailable(res)) {
+            return;
+        }
+
         await User.findByIdAndUpdate(req.user.id, {
             $inc: { tokenVersion: 1 }
         });
@@ -181,6 +214,10 @@ const logoutUser = async (req, res) => {
 // @access  Public
 const forgotPassword = async (req, res) => {
     try {
+        if (!ensureDatabaseAvailable(res)) {
+            return;
+        }
+
         const { email } = req.body;
         const user = await User.findOne({ email });
 

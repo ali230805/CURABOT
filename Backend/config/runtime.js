@@ -1,4 +1,5 @@
 const crypto = require('crypto');
+const mongoose = require('mongoose');
 
 const fallbackJwtSecret = crypto.randomBytes(48).toString('hex');
 let hasWarnedAboutJwtFallback = false;
@@ -25,7 +26,14 @@ const getJwtSecret = () => {
     return fallbackJwtSecret;
 };
 
+const isDatabaseConnected = () => mongoose.connection.readyState === 1;
+
+const getDatabaseUnavailableMessage = () =>
+    'Database is not connected. Set MONGODB_URI in your Render backend environment variables and redeploy to enable login and saved data.';
+
 module.exports = {
     getJwtSecret,
-    getMissingCriticalEnvVars
+    getMissingCriticalEnvVars,
+    isDatabaseConnected,
+    getDatabaseUnavailableMessage
 };
