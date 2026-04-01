@@ -43,12 +43,21 @@ const loadEnvFile = (filename) => {
 envFiles.forEach(loadEnvFile);
 
 const apiUrl = (process.env.REACT_APP_API_URL || '').trim();
+const isPlaceholderRenderUrl = (value = '') =>
+  /(your|actual)-[a-z0-9-]+\.onrender\.com/i.test(value) ||
+  /your-[a-z0-9-]+\.onrender\.com/i.test(value);
 
 if (!apiUrl) {
   console.warn(
     '[env] REACT_APP_API_URL is not set. The frontend will fall back to the same deployed origin with /api in production.'
   );
 } else {
+  if (isPlaceholderRenderUrl(apiUrl)) {
+    console.warn(
+      '[env] REACT_APP_API_URL looks like a placeholder Render URL. The frontend will ignore it and fall back to the same deployed origin.'
+    );
+  }
+
   if (!/^https?:\/\//i.test(apiUrl)) {
     console.error('[env] REACT_APP_API_URL must start with http:// or https://');
     process.exit(1);
@@ -64,6 +73,12 @@ if (!apiUrl) {
 const socketUrl = (process.env.REACT_APP_SOCKET_URL || '').trim();
 
 if (socketUrl) {
+  if (isPlaceholderRenderUrl(socketUrl)) {
+    console.warn(
+      '[env] REACT_APP_SOCKET_URL looks like a placeholder Render URL. The frontend will ignore it and fall back to the same deployed origin.'
+    );
+  }
+
   if (!/^https?:\/\//i.test(socketUrl)) {
     console.error('[env] REACT_APP_SOCKET_URL must start with http:// or https://');
     process.exit(1);

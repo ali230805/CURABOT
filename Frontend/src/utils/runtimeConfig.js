@@ -4,8 +4,22 @@ const isLocalBrowser = () =>
   typeof window !== 'undefined' &&
   ['localhost', '127.0.0.1'].includes(window.location.hostname);
 
+const isPlaceholderRenderUrl = (value = '') =>
+  /(your|actual)-[a-z0-9-]+\.onrender\.com/i.test(value) ||
+  /your-[a-z0-9-]+\.onrender\.com/i.test(value);
+
+const getUsableEnvUrl = (value = '') => {
+  const normalizedValue = trimTrailingSlash((value || '').trim());
+
+  if (!normalizedValue || isPlaceholderRenderUrl(normalizedValue)) {
+    return '';
+  }
+
+  return normalizedValue;
+};
+
 export const getApiBaseUrl = () => {
-  const envApiUrl = trimTrailingSlash((process.env.REACT_APP_API_URL || '').trim());
+  const envApiUrl = getUsableEnvUrl(process.env.REACT_APP_API_URL || '');
 
   if (envApiUrl) {
     return envApiUrl;
@@ -23,13 +37,13 @@ export const getApiBaseUrl = () => {
 };
 
 export const getSocketBaseUrl = () => {
-  const envSocketUrl = trimTrailingSlash((process.env.REACT_APP_SOCKET_URL || '').trim());
+  const envSocketUrl = getUsableEnvUrl(process.env.REACT_APP_SOCKET_URL || '');
 
   if (envSocketUrl) {
     return envSocketUrl;
   }
 
-  const envApiUrl = trimTrailingSlash((process.env.REACT_APP_API_URL || '').trim());
+  const envApiUrl = getUsableEnvUrl(process.env.REACT_APP_API_URL || '');
 
   if (envApiUrl) {
     return trimTrailingSlash(envApiUrl.replace(/\/api\/?$/, ''));
